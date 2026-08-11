@@ -8,19 +8,19 @@ use Illuminate\Support\Facades\Log;
 
 trait HasMetrics
 {
-    public function getCpuMetrics(int $mins = 5): ?array
+    public function getCpuMetrics(int $mins = 5, ?string $container = null): ?array
     {
-        return $this->getMetrics('cpu', $mins, 'percent');
+        return $this->getMetrics('cpu', $mins, 'percent', $container);
     }
 
-    public function getMemoryMetrics(int $mins = 5): ?array
+    public function getMemoryMetrics(int $mins = 5, ?string $container = null): ?array
     {
         $field = $this->isServerMetrics() ? 'usedPercent' : 'used';
 
-        return $this->getMetrics('memory', $mins, $field);
+        return $this->getMetrics('memory', $mins, $field, $container);
     }
 
-    private function getMetrics(string $type, int $mins, string $valueField): ?array
+    private function getMetrics(string $type, int $mins, string $valueField, ?string $container = null): ?array
     {
         $server = $this->getMetricsServer();
         if (! $server->isMetricsEnabled()) {
@@ -28,7 +28,7 @@ trait HasMetrics
         }
 
         $from = now()->subMinutes($mins)->toIso8601ZuluString();
-        $endpoint = $this->getMetricsEndpoint($type, $from);
+        $endpoint = $this->getMetricsEndpoint($type, $from, $container);
 
         $previousToken = null;
         try {
@@ -77,13 +77,15 @@ trait HasMetrics
         return $this->isServerMetrics() ? $this : $this->destination->server;
     }
 
-    private function getMetricsEndpoint(string $type, string $from): string
+    private function getMetricsEndpoint(string $type, string $from, ?string $container = null): string
     {
         $base = 'http://localhost:8888/api';
         if ($this->isServerMetrics()) {
             return "{$base}/{$type}/history?from={$from}";
         }
 
-        return "{$base}/container/{$this->uuid}/{$type}/history?from={$from}";
+        $identifier = $container ?? $this->uuid;
+
+        return "{$base}/container/{$identifier}/{$type}/history?from={$from}";
     }
 }

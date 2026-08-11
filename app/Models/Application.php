@@ -496,6 +496,41 @@ class Application extends BaseModel
         return $containers->pluck('Names')->toArray();
     }
 
+    /**
+     * Get the currently running containers for this application, keyed by their actual
+     * Docker container name (which is what Sentinel uses to identify a container for metrics).
+     *
+     * Mainly useful for Docker Compose applications, where a single application can be
+     * backed by multiple containers (one per service defined in the compose file).
+     */
+    public function getMetricsContainers(): Collection
+    {
+        $server = data_get($this, 'destination.server');
+        if (! $server || ! $server->isFunctional() || $server->isSwarm()) {
+            return collect([]);
+        }
+
+        try {
+            $containers = getCurrentApplicationContainerStatus($server, $this->id);
+        } catch (\Throwable) {
+            return collect([]);
+        }
+
+        return $containers->map(function ($container) {
+            $name = data_get($container, 'Names');
+            if (blank($name) || data_get($container, 'State') !== 'running') {
+                return null;
+            }
+            $labels = format_docker_labels_to_json(data_get($container, 'Labels', ''));
+            $service = data_get($labels, 'com.docker.compose.service', $name);
+
+            return [
+                'name' => $name,
+                'service' => $service,
+            ];
+        })->filter()->sortBy('service')->values();
+    }
+
     public function deleteConfigurations()
     {
         $server = data_get($this, 'destination.server');

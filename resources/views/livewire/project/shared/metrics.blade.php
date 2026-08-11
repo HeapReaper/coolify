@@ -4,22 +4,29 @@
     </div>
     <div class="pb-4">Basic metrics for your application container.</div>
     <div>
-        @if ($resource->getMorphClass() === 'App\Models\Application' && $resource->build_pack === 'dockercompose')
-            <x-callout type="warning" title="Not Available">
-                Metrics are not available for Docker Compose applications yet!
-            </x-callout>
-        @elseif(!$resource->destination->server->isMetricsEnabled())
+        @if(!$resource->destination->server->isMetricsEnabled())
             <x-callout type="info" title="Metrics Not Enabled">
                 Metrics are only available for servers with Sentinel & Metrics enabled.
                 Go to <a class="underline font-semibold" href="{{ route('server.metrics', ['server_uuid' => $resource->destination->server->uuid]) }}" {{ wireNavigate() }}>Server Metrics</a> to enable it.
             </x-callout>
         @else
-            @if (!str($resource->status)->contains('running'))
+            @if ($isDockerCompose && $containers->isEmpty())
+                <x-callout type="warning" title="Container Not Running">
+                    Metrics are only available when at least one container of this Docker Compose application is running!
+                </x-callout>
+            @elseif (!$isDockerCompose && !str($resource->status)->contains('running'))
                 <x-callout type="warning" title="Container Not Running">
                     Metrics are only available when the application container is running!
                 </x-callout>
             @else
                 <div>
+                @if ($isDockerCompose)
+                    <x-forms.select label="Container" wire:change="setContainer" id="selectedContainer">
+                        @foreach ($containers as $container)
+                            <option value="{{ $container['name'] }}" @selected($container['name'] === $selectedContainer)>{{ $container['service'] }}</option>
+                        @endforeach
+                    </x-forms.select>
+                @endif
                 <x-forms.select label="Interval" wire:change="setInterval" id="interval">
                 <option value="5">5 minutes (live)</option>
                 <option value="10">10 minutes (live)</option>

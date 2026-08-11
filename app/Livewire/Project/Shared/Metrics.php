@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Project\Shared;
 
+use App\Models\Application;
+use Illuminate\Support\Collection;
 use Livewire\Component;
 
 class Metrics extends Component
@@ -18,6 +20,35 @@ class Metrics extends Component
 
     public bool $poll = true;
 
+    public bool $isDockerCompose = false;
+
+    public Collection $containers;
+
+    public ?string $selectedContainer = null;
+
+    public function mount($resource)
+    {
+        $this->resource = $resource;
+        $this->containers = collect();
+
+        if ($this->resource instanceof Application && $this->resource->build_pack === 'dockercompose') {
+            $this->isDockerCompose = true;
+            $this->loadContainers();
+        }
+    }
+
+    public function loadContainers()
+    {
+        try {
+            $this->containers = $this->resource->getMetricsContainers();
+            if ($this->containers->isNotEmpty() && (! $this->selectedContainer || ! $this->containers->contains('name', $this->selectedContainer))) {
+                $this->selectedContainer = data_get($this->containers->first(), 'name');
+            }
+        } catch (\Throwable $e) {
+            $this->containers = collect();
+        }
+    }
+
     public function pollData()
     {
         if ($this->poll || $this->interval <= 10) {
@@ -31,8 +62,12 @@ class Metrics extends Component
     public function loadData()
     {
         try {
-            $cpuMetrics = $this->resource->getCpuMetrics($this->interval);
-            $memoryMetrics = $this->resource->getMemoryMetrics($this->interval);
+            if ($this->isDockerCompose && ! $this->selectedContainer) {
+                return;
+            }
+            $container = $this->isDockerCompose ? $this->selectedContainer : null;
+            $cpuMetrics = $this->resource->getCpuMetrics($this->interval, $container);
+            $memoryMetrics = $this->resource->getMemoryMetrics($this->interval, $container);
             $this->dispatch("refreshChartData-{$this->chartId}-cpu", [
                 'seriesData' => $cpuMetrics,
             ]);
@@ -49,6 +84,11 @@ class Metrics extends Component
         if ($this->interval <= 10) {
             $this->poll = true;
         }
+        $this->loadData();
+    }
+
+    public function setContainer()
+    {
         $this->loadData();
     }
 
