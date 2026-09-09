@@ -22,14 +22,14 @@
             <span style="width: {{ $barWidth }}%"></span>
         </div>
     @else
-        <span class="text-[13px] text-neutral-400 dark:text-fg-faint">
-            @if (! $hasMetrics)
-                Not collected
-            @elseif (! $metricsEnabled)
-                Metrics off
-            @else
-                -
-            @endif
+        @php
+            $emptyLabel = ! $hasMetrics ? 'Unsupported' : (! $metricsEnabled ? 'Metrics off' : '-');
+            $emptyTitle = ! $hasMetrics
+                ? 'Sentinel stores container metrics under the Docker container name, and its history endpoint only accepts names made of letters and digits. Compose container names contain a hyphen, so no history can be read for them.'
+                : (! $metricsEnabled ? 'Enable metrics on this server to collect container history.' : 'No samples in the selected time range.');
+        @endphp
+        <span class="text-[13px] text-neutral-400 dark:text-fg-faint" title="{{ $emptyTitle }}">
+            {{ $emptyLabel }}
         </span>
     @endif
 </div>

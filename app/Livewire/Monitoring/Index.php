@@ -295,6 +295,11 @@ class Index extends Component
                 });
         }
 
+        // Compose sub-containers get no metrics: Sentinel keys container history by
+        // Docker container name ("{subName}-{serviceUuid}") and its
+        // /api/container/{id}/{cpu,memory}/history route only accepts ids matching
+        // ^[a-zA-Z0-9]+$. The hyphen in a compose container name makes every such
+        // lookup return an empty series even though Sentinel did record the samples.
         Service::ownedByCurrentTeam()
             ->with(['environment.project', 'destination', 'applications', 'databases'])
             ->get()

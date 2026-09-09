@@ -232,3 +232,29 @@ it('summarises servers and containers for the page header', function () {
         ->and($summary['containers'])->toBe(2)
         ->and($summary['running_containers'])->toBe(1);
 });
+
+it('marks compose sub-containers as unsupported instead of showing empty metrics', function () {
+    $service = Service::factory()->create([
+        'name' => 'Monitored service',
+        'environment_id' => $this->environment->id,
+        'destination_id' => $this->destination->id,
+        'server_id' => $this->server->id,
+    ]);
+    ServiceApplication::create([
+        'name' => 'worker',
+        'human_name' => 'Worker',
+        'image' => 'redis:7',
+        'status' => 'running',
+        'service_id' => $service->id,
+    ]);
+
+    $component = Livewire::test(Index::class);
+    $row = collect($component->get('serverCards')[0]['containers'])
+        ->firstWhere('type', 'service');
+
+    // Sentinel keys history by container name and rejects ids containing a hyphen,
+    // so a compose container can never resolve through its history endpoint.
+    expect($row['has_metrics'])->toBeFalse();
+
+    $component->assertSee('Unsupported');
+});
