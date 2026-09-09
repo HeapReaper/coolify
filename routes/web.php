@@ -113,6 +113,7 @@ use App\Models\ServiceDatabase;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
+use App\Livewire\Monitoring\Index as MonitoringIndex;
 
 Route::post('/forgot-password', [Controller::class, 'forgot_password'])->name('password.forgot')->middleware('throttle:forgot-password');
 Route::get('/realtime', [Controller::class, 'realtime_test'])->middleware('auth');
@@ -364,6 +365,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/servers/new', ServerCreatePage::class)->name('server.create')->middleware('can:create,'.Server::class);
     Route::get('/servers/new/{type}/{token_uuid}', ServerCreatePage::class)->name('server.create.token')->middleware('can:create,'.Server::class)->whereIn('type', ['hetzner', 'vultr', 'digital-ocean']);
     Route::get('/servers/new/{type}', ServerCreatePage::class)->name('server.create.type')->middleware('can:create,'.Server::class)->whereIn('type', ['hetzner', 'vultr', 'digital-ocean', 'manual']);
+
+    Route::get('/monitoring', MonitoringIndex::class)->name('monitoring.index');
+
 
     Route::prefix('server/{server_uuid}')->group(function () {
         Route::get('/', ServerShow::class)->name('server.show');

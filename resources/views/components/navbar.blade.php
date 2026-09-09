@@ -116,6 +116,14 @@
                 </a>
             </li>
             <li>
+                <a title="Monitoring" {{ wireNavigate() }}
+                class="{{ request()->is('monitoring/*') || request()->is('monitoring') ? 'menu-item menu-item-active' : 'menu-item' }}"
+                   :class="collapsed && 'lg:justify-center lg:px-0'" href="{{ route('monitoring.index') }}">
+                    <x-reicon name="monitoring" class="menu-item-icon" />
+                    <span class="menu-item-label" :class="collapsed && 'lg:hidden'">Monitoring</span>
+                </a>
+            </li>
+            <li>
                 <a title="Sources" {{ wireNavigate() }}
                     class="{{ request()->is('source*') ? 'menu-item-active menu-item' : 'menu-item' }}"
                     :class="collapsed && 'lg:justify-center lg:px-0'" href="{{ route('source.all') }}">
