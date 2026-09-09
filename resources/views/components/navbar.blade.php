@@ -95,6 +95,14 @@
                     <span class="menu-item-label" :class="collapsed && 'lg:hidden'">Analytics</span>
                 </a>
             </li>
+            <li>
+                <a title="Monitoring" {{ wireNavigate() }}
+                class="{{ request()->is('monitoring/*') || request()->is('monitoring') ? 'menu-item menu-item-active' : 'menu-item' }}"
+                   :class="collapsed && 'lg:justify-center lg:px-0'" href="{{ route('monitoring.index') }}">
+                    <x-reicon name="monitoring" class="menu-item-icon" />
+                    <span class="menu-item-label" :class="collapsed && 'lg:hidden'">Monitoring</span>
+                </a>
+            </li>
             @can('canAccessTerminal')
                 <li>
                     <a title="Terminal"
@@ -113,14 +121,6 @@
                     :class="collapsed && 'lg:justify-center lg:px-0'" href="/servers">
                     <x-reicon name="servers" class="menu-item-icon" />
                     <span class="menu-item-label" :class="collapsed && 'lg:hidden'">Servers</span>
-                </a>
-            </li>
-            <li>
-                <a title="Monitoring" {{ wireNavigate() }}
-                class="{{ request()->is('monitoring/*') || request()->is('monitoring') ? 'menu-item menu-item-active' : 'menu-item' }}"
-                   :class="collapsed && 'lg:justify-center lg:px-0'" href="{{ route('monitoring.index') }}">
-                    <x-reicon name="monitoring" class="menu-item-icon" />
-                    <span class="menu-item-label" :class="collapsed && 'lg:hidden'">Monitoring</span>
                 </a>
             </li>
             <li>
